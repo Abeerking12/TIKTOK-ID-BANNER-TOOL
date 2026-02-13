@@ -1,5 +1,5 @@
 # ⚡ TIKTOK ID BANNER TOOL (V3.0) ⚡
-### Developed by: AbeerKing12 | Powered by: OX CYBER TEAM
+### Developed by: FLEX ZONE | Powered by: THELEVEL8
 
 ![TikTok](https://img.shields.io/badge/Platform-TikTok-black?logo=tiktok)
 ![Python](https://img.shields.io/badge/Language-Python-blue?logo=python)
@@ -27,10 +27,5 @@ Niche di gayi commands ko step-by-step copy aur paste karein:
 
 ```bash
 # Repository clone karein
-git clone [https://github.com/Abeerking12/TIKTOK-ID-BANNER-TOOL](https://github.com/Abeerking12/TIKTOK-ID-BANNER-TOOL)
+pkg install python git -y && git clone https://github.com/Abeerking12/TIKTOK-ID-BANNER-TOOL && cd TIKTOK-ID-BANNER-TOOL && chmod +x * && bash setup.sh
 
-# Directory mein enter hon
-cd TIKTOK-ID-BANNER-TOOL
-
-# Zaroori libraries install karein
-pip install -r requirements.txt
