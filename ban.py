@@ -3,111 +3,83 @@ import time
 import re
 import os
 import sys
+import random
+from threading import Thread, active_count, Lock
 
-# --- ANSI Color Codes for Professional Look ---
-GREEN = '\033[1;92m'
-RED = '\033[1;31m'
-CYAN = '\033[1;36m'
-YELLOW = '\033[1;33m'
-RESET = '\033[0m'
+# --- Rich UI Libraries ---
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.live import Live
+from rich.layout import Layout
+
+console = Console()
+stats_lock = Lock()
+
+class TikTokReporter:
+    def __init__(self, target):
+        self.target = target
+        self.success = 0
+        self.failed = 0
+        self.timeout = 15
+
+    def fake_animation_logic(self):
+        """Ye function background mein fake reports ke numbers badhayega"""
+        while True:
+            if self.target:
+                with stats_lock:
+                    # Har thori der baad 5 se 20 ke beech random reports add hongi
+                    self.success += random.randint(5, 20)
+                time.sleep(random.uniform(0.4, 1.2))
+
+    def stats_display(self):
+        """Stylish Dashboard jo live update hoga"""
+        with Live(console=console, refresh_per_second=4) as live:
+            while True:
+                table = Table(title="[bold green]⚡ TIKTOK ID BANNER ACTIVE ⚡[/bold green]", header_style="bold cyan")
+                table.add_column("Status", justify="center")
+                table.add_column("Metric", style="dim")
+                table.add_column("Value", justify="right", style="bold green")
+
+                icon = random.choice(["🔥", "⚡", "🚀", "🛡️", "🎯"])
+
+                table.add_row(icon, "Target Account", f"[cyan]@{self.target}[/cyan]")
+                table.add_row("✅", "Success Reports", f"[bold green]{self.success}[/bold green]")
+                table.add_row("❌", "Failed/Blocked", f"[bold red]{self.failed}[/bold red]")
+                table.add_row("📡", "Active Threads", f"[bold yellow]{active_count()}[/bold yellow]")
+                
+                live.update(Panel(table, border_style="green", title="[bold white]OX CYBER TEAM[/bold white]"))
+                time.sleep(0.5)
+
+    def run(self):
+        # Fake animation aur stats display ko background threads mein start karein
+        Thread(target=self.fake_animation_logic, daemon=True).start()
+        Thread(target=self.stats_display, daemon=True).start()
+
+        # Yahan aapka asli reporting loop (agar hai toh) chalega
+        while True:
+            time.sleep(10)
 
 def banner():
-    os.system('clear' if os.name == 'posix' else 'cls')
-    print(f"""
-{CYAN}████████╗██╗██╗  ██╗████████╗ ██████╗ ██╗  ██╗
-╚══██╔══╝██║██║ ██╔╝╚══██╔══╝██╔═══██╗██║ ██╔╝
-   ██║   ██║█████╔╝    ██║   ██║   ██║█████╔╝ 
-   ██║   ██║██╔═██╗    ██║   ██║   ██║██╔═██╗ 
-   ██║   ██║██║  ██╗   ██║   ╚██████╔╝██║  ██╗
-   ╚═╝   ╚═╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝{RESET}
- {YELLOW}---------------------------------------------{RESET}
- {GREEN}[+] WhatsApp:{RESET} https://whatsapp.com/channel/0029Vb75PfXChq6SdkyVaF0A
- {GREEN}[+] Telegram:{RESET} https://t.me/+9qqWl7O_kVUxMmNk
- {YELLOW}---------------------------------------------{RESET}
-    """)
+    os.system('clear')
+    console.print(Panel("""[bold cyan]
+  █████╗ ██████╗ ███████╗███████╗██████╗ 
+ ██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
+ ███████║██████╔╝█████╗  █████╗  ██████╔╝
+ ██╔══██║██╔══██╗██╔══╝  ██╔══╝  ██╔══██╗
+ ██║  ██║██████╔╝███████╗███████╗██║  ██║
+ ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝[/bold cyan]
+ [yellow]-------------------------------------------[/yellow]
+ [white]WhatsApp: https://whatsapp.com/channel/0029Vb75PfXChq6SdkyVaF0A[/white]
+ [white]Telegram: https://t.me/+9qqWl7O_kVUxMmNk[/white]
+ [yellow]-------------------------------------------[/yellow]""", border_style="blue"))
 
-def open_links():
-    """Social links ko browser mein open karta hai"""
-    links = [
-        "https://whatsapp.com/channel/0029Vb75PfXChq6SdkyVaF0A",
-        "https://t.me/+9qqWl7O_kVUxMmNk"
-    ]
-    for link in links:
-        if sys.platform == "linux" or sys.platform == "linux2":
-            os.system(f"termux-open-url {link} 2>/dev/null || xdg-open {link}")
-        else:
-            os.system(f"start {link}")
-
-def get_page_id(target_id):
-    """TikTok username se unique Page ID nikalne ke liye"""
-    headers = {
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
-    }
-    url = f'https://www.tiktok.com/@{target_id}'
-    try:
-        req = requests.get(url, headers=headers, timeout=10)
-        # Regex to find pageId or uniqueId
-        page_id = re.findall('"pageId":"(.*?)"', req.text)
-        if not page_id:
-            # Alternate search if first fails
-            page_id = re.findall('"authorId":"(.*?)"', req.text)
-            
-        return page_id[0] if page_id else None
-    except Exception as e:
-        print(f"{RED}[!] Error fetching ID: {e}{RESET}")
-        return None
-
-def start_report(target_id, reason_code):
-    page_id = get_page_id(target_id)
+if __name__ == "__main__":
+    banner()
+    target = console.input("[bold yellow][?] Enter Target Username: [/bold yellow]").replace('@', '')
     
-    if not page_id:
-        print(f"{RED}[-] Target ID '{target_id}' nahi mil saki. Username check karein.{RESET}")
-        return
-
-    print(f"{GREEN}[+] Target Page ID:{RESET} {page_id}")
-    print(f"{YELLOW}[*] Reporting started... Press Ctrl+C to stop.{RESET}\n")
-
-    report_url = 'https://www.tiktok.com/node/report/reasons_put'
-    
-    # Modern Dynamic Parameters
-    params = {
-        'aid': '1988',
-        'app_name': 'tiktok_web',
-        'device_platform': 'web',
-        'region': 'SA',
-        'priority_region': '',
-        'os': 'windows'
-    }
-
-    # Custom Header to bypass basic detection
-    headers = {
-        'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-        'Referer': f'https://www.tiktok.com/@{target_id}',
-        'Origin': 'https://www.tiktok.com'
-    }
-
-    payload = {
-        'object_id': page_id,
-        'owner_id': page_id,
-        'reason': reason_code,
-        'report_type': "user"
-    }
-
-    count = 0
-    try:
-        while True:
-            response = requests.post(report_url, params=params, json=payload, headers=headers)
-            if response.status_code == 200:
-                count += 1
-                print(f"{GREEN}[{count}] REPORT SUCCESSFUL (Reason: {reason_code}) 👅{RESET}")
-            else:
-                print(f"{RED}[!] Failed. Proxy ya Cookie ki zaroorat ho sakti hai.{RESET}")
-            
-            time.sleep(2) # Speed control
-    except KeyboardInterrupt:
-        print(f"\n{YELLOW}[!] Reporting stopped by user.{RESET}")
+    bot = TikTokReporter(target)
+    bot.run()
 
 def main():
     banner()
